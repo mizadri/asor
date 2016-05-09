@@ -9,26 +9,26 @@
 	machine 2 0 0 1 1
 	machine 3 0 1
 	// Esta configuracion de ejemplo tiene dos hosts(1 y 3) conectados via 
-	// eth0 a dos redes diferentes, que se interconectan mediante un router(3)
+	// eth0 a dos redes diferentes, que se interconectan mediante un router(2)
  
 3. vtopol examen.topol
 //2: maquinas virtuales: user: root 
 					    //pwd: cursoredes
 1.Hosts:
-	> ip addr add 192.168.0.1/24 dev eth0
-	> ip addr add fd00:0:0:a::1/64 dev eth0
-	> ip link set eth0 up // Esto nos otorga una fe80::net_id
-	> ip route add default via 192.168.0.2
-	> ip -6 route add default via fd00:0:0:0:a::3
+	$> ip addr add 192.168.0.1/24 dev eth0
+	$> ip addr add fd00:0:0:a::1/64 dev eth0
+	$> ip link set eth0 up // Esto nos otorga una fe80::net_id
+	$> ip route add default via 192.168.0.2
+	$> ip -6 route add default via fd00:0:0:0:a::3
 	 
 2.Router
-	>[hosts excepto los default]
-	>sysctl -w net.ipv6.conf.all.forwarding=1
-	>sysctl net.ipv4.ip-forward=1
+	//[hosts excepto los default]
+	$>sysctl -w net.ipv6.conf.all.forwarding=1
+	$>sysctl net.ipv4.ip-forward=1
 	
 3.Configuracion dhcp
 	1. Hosts
-		> ip addr del 192.168.0.1/24 dev eth0
+		$> ip addr del 192.168.0.1/24 dev eth0
 	2. Router
 		1. Añadir seccion subnet '/etc/dhcp/dhcpd.conf'
 		subnet 10.0.0.0 netmask 255.255.255.0 {
@@ -36,14 +36,14 @@
 			option routers 10.0.0.3;
 			option broadcast-address 10.0.0.255;
 		}
-		2. > service isc-dhcp-server start
+		2. $> service isc-dhcp-server start
 	[3. Persistente:En host]
 	Añadir a fichero: /etc/network/interfaces 
 	//Con auto se hace al iniciar la maquina
 	auto eth0
 	iface eth0 inet dhcp
 	
-	>ifup eth0 [ifdown]	
+	$> ifup eth0 //[ifdown antes para bajar si estaba activa]	
 	
 3.Configuracion persistente ipv6 
 
@@ -66,15 +66,15 @@
 		
 	
 	2. configurar/desconfigurar
-		> ifdown eth0
-		> ifup eth0 
+		$> ifdown eth0
+		$> ifup eth0 
 		
 		 
 3.Anuncio de prefijos ipv6
 
 	1. Eliminar configuracion en Hosts
-		> ip addr del fd00:0:0:a::1/64 dev eth0
-		> ip link set eth0 down
+		$> ip addr del fd00:0:0:a::1/64 dev eth0
+		$> ip link set eth0 down
 	2. En router 
 		1. Activar (zebra=yes) en /etc/quagga/daemons
 		2. Incluir configuracion en /etc/quagga/zebra.conf
@@ -86,38 +86,38 @@
 			no ipv6 nd suppress-ra
 			ipv6 nd prefix fd00:0:0:b::/64
 		3. Arrancar demonio
-			> service quagga restart
+			$> service quagga restart
 	3. Hosts
-		> ip link set eth0 up
+		$> ip link set eth0 up
 3.Comandos útiles
 
-	> ping6 -I eth0 fe80::ff:fe00:100//si usamos fe80 necesitamos decir ifaz
-	> ping6 fd00:0:0:b::4
-	> ip addr
-	> ip -6 address show eth0
-	> route -e[-n para numeros]
-	> ip route show [dev eth0]
-	> ip route add 10.40.0.0/16 via 10.72.75.254
-	> hping3 -p 23 -s --flood <ip_vict>[--rand-source]
-	> netstat -at //(comprobar estado conexion)
-	> watch netstat -t -o //(ver temporizador)
+	$> ping6 -I eth0 fe80::ff:fe00:100//si usamos fe80 necesitamos especificar la ifaz de salida
+	$> ping6 fd00:0:0:b::4
+	$> ip addr
+	$> ip -6 address show eth0
+	$> route -e[-n para numeros]
+	$> ip route show [dev eth0]
+	$> ip route add 10.40.0.0/16 via 10.72.75.254
+	$> hping3 -p 23 -s --flood <ip_vict>[--rand-source]
+	$> netstat -at //(comprobar estado conexion)
+	$> watch netstat -t -o //(ver temporizador)
 	
 4.iptables
 
-	> -A append | -I [n(=1 default)] -D n
-	> iptables save|restore [file]
-	> iptables ... -j REJECT --with-icmp-type
+	$> -A append | -I [n(=1 default)] -D n
+	$> iptables save|restore [file]
+	$> iptables ... -j REJECT --with-icmp-type
 	
-	> iptables -P FORWARD DROP //Politica por defecto mas segura
-	> iptables -A FORWARD -p tcp --dport 80,22 -d <ip> -j ACCEPT
-	> iptables -I FORWARD -m --state ESTABLISHED, RELATED -j ACCEPT
-	> iptables -A INPUT -i eth0 -p tcp --tcp-flags ALL SYN -j DROP
+	$> iptables -P FORWARD DROP //Politica por defecto mas segura
+	$> iptables -A FORWARD -p tcp --dport 80,22 -d <ip> -j ACCEPT
+	$> iptables -I FORWARD -m --state ESTABLISHED, RELATED -j ACCEPT
+	$> iptables -A INPUT -i eth0 -p tcp --tcp-flags ALL SYN -j DROP
 											//me fijo | tienen que estar de esos	
 												//ALL ALL (XMAS SCAN)
 												//NULL NULL(NULL SCAN)
-	> iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+	$> iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
 	 // nat dinamico
-	> iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 80 -j DNAT --to 192.168.0.1:7777
+	$> iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 80 -j DNAT --to 192.168.0.1:7777
 	 // esconder servidor web en otro puerto
 	 
 5.DNS 
@@ -137,7 +137,7 @@
 		}
 		
 	2.Crear archivos de zonas
-	//Comprobar sintaxis: > named-checkconf <zona> <arcivo>
+	//Comprobar sintaxis: $> named-checkconf <zona> <arcivo>
 	forward:
 			; db labfdi
 			$TTL 28400
@@ -179,44 +179,46 @@
 			250.0.168.192.in-addr.arpa. IN PTR mail.labfdi.es.
 			
 	3. Activar demonio en servidor
-		> service bind9 start
-		> service bind9 status
+		$> service bind9 start
+		$> service bind9 status
 	4. Configurar host cliente para usar el servidor al hacer consultas
 		;;;Archivo '/etc/resolv.conf':
 
 		search ns.labfdi.es.
 		nameserver 192.168.0.1
 	5. Reiniciar demonio del host cliente.
-		> service bind9 restart
+		$> service bind9 restart
 		
 	COMANDOS DNS
-	> host -t [registro: a mx ns] www.google.com.
-	> host <ip> //devuelve pointer a hostname
-	> host <hostname> //devueltve ip
-	> dig @dnsserver hostname
-	> dig -x ip
-	> dig +trace hostname // consulta paso a paso
-	> host -v <direccion> [servidor DNS]
+	$> host -t [registro: a mx ns] www.google.com.
+	$> host <ip> //devuelve pointer a hostname
+	$> host <hostname> //devueltve ip
+	$> dig @dnsserver hostname
+	$> dig -x ip
+	$> dig +trace hostname // consulta paso a paso
+	$> host -v <direccion> [servidor DNS]
 	
-	Recursividad forward:
+	Ejemplos Recursividad forward:
 	
 	<host>
-	1.  host -v www.fdi.ucm.es. a.root-servers.net.
-	2.  host -v www.fdi.ucm.es. a.nic.es.
-	3.  host -v www.fdi.ucm.es. sun.rediris.es.
+		1. $> host -v www.fdi.ucm.es. a.root-servers.net.
+		2. $> host -v www.fdi.ucm.es. a.nic.es.
+		3. $> host -v www.fdi.ucm.es. sun.rediris.es.
+	</host>
 	<dig>
-	1. dig @a.root-servers.net. www.fdi.ucm.es
-	2. dig @a.nic.es. www.fdi.ucm.es
-	3. dig @chico.rediris.es. www.fdi.ucm.es
+		1. $> dig @a.root-servers.net. www.fdi.ucm.es
+		2. $> dig @a.nic.es. www.fdi.ucm.es
+		3. $> dig @chico.rediris.es. www.fdi.ucm.es
+	</dig>
 
 	;; ANSWER SECTION:
 	www.fdi.ucm.es.		86400	IN	A	147.96.85.71
 
 	
 	Recursividad reverse:
-	1. host -v 147.96.85.71 a.in-addr-servers.arpa.
-	2. host -v 147.96.85.71 u.arin.net.
-    3. host -v 147.96.85.71 chico.rediris.es.
+	1. $> host -v 147.96.85.71 a.in-addr-servers.arpa.
+	2. $> host -v 147.96.85.71 u.arin.net.
+    3. $> host -v 147.96.85.71 chico.rediris.es.
 	;; ANSWER SECTION:
 	71.85.96.147.in-addr.arpa. 86400 IN	PTR	www.fdi.ucm.es.
 
@@ -224,17 +226,17 @@
 	
 				
 7. Configuracion RIP. Todos los hosts: 
-	1. > cd /etc/quagga
-	2. > nano daemons //zebra=yes && (ripd=yes||ripng=yes)
-	// > cp /usr/share/doc/quagga/examples/ripd.conf.sample ripd.conf||ripng.conf(=ipv6)
-	3. > touch zebra.conf; nano ripd.conf
+	1. $> cd /etc/quagga
+	2. $> nano daemons //zebra=yes && (ripd=yes||ripng=yes)
+	// $> cp /usr/share/doc/quagga/examples/ripd.conf.sample ripd.conf||ripng.conf(=ipv6)
+	3. $> touch zebra.conf; nano ripd.conf
 	router rip[ //|| ripng(=ipv6)]
 	version 2 // || sin esta linea ipv6
 	network eth0
 	network eth1
 	network eth2
 	network eth3
-	4. > service quagga restart 
+	4. $> service quagga restart 
 	
 	5.(opcional: conectarnos con telnet para configurar)
 		1. ripd.conf ->Borrar todo y poner:
@@ -242,10 +244,23 @@
 		password redes
 		2. service quagga restart
 		3. telnet localhost ripd // insertar password
+
+// 	COMANDOS PARA SACAR DEL MANUAL EJEMPLOS MUY PARECIDOS A LAS SOLUCIONES
+//-Eliminar final de archivo y separar parte del cliente/servidor en dos archivos
+//-------------------------------------------------------------------------------
+//----: man -L en getaddrinfo | tail -n 200 > sockets.c -------------------------
+//Ojo: 	
+//-Ejemplo UDP. Cambiar hints.socktype a SOCK_STREAM para tcp--------------------
+//-hints.ai_family = AF_INET6 //evitar que se utilizen siempre ipv4--------------
+//-------------------------------------------------------------------------------
+
+//-------------------------------------------------------------------------------
+//-----------: man -L en pipe | tail -n 60 > pipe.c -----------------------------
+//-------------------------------------------------------------------------------
 		
-//-------------PRACTICAS DE SISTEMAS OPERATIVOS-------------------------
-//----------------------------------------------------------------------
-//-----------5-INFORMACIÓN DEL SISTEMA DE FICHEROS----------------------
+//-------------PRACTICAS DE SISTEMAS OPERATIVOS----------------------------------
+//-------------------------------------------------------------------------------
+//-----------5-INFORMACIÓN DEL SISTEMA DE FICHEROS-------------------------------
 #include <stdio.h>
 #include <sys/utsname.h>
 #include <unistd.h>
