@@ -204,18 +204,19 @@
 		1. $> host -v www.fdi.ucm.es. a.root-servers.net.
 		2. $> host -v www.fdi.ucm.es. a.nic.es.
 		3. $> host -v www.fdi.ucm.es. sun.rediris.es.
-	</host>
+	
 	<dig>
 		1. $> dig @a.root-servers.net. www.fdi.ucm.es
 		2. $> dig @a.nic.es. www.fdi.ucm.es
 		3. $> dig @chico.rediris.es. www.fdi.ucm.es
-	</dig>
+	
 
 	;; ANSWER SECTION:
 	www.fdi.ucm.es.		86400	IN	A	147.96.85.71
 
 	
 	Recursividad reverse:
+
 	1. $> host -v 147.96.85.71 a.in-addr-servers.arpa.
 	2. $> host -v 147.96.85.71 u.arin.net.
     3. $> host -v 147.96.85.71 chico.rediris.es.
